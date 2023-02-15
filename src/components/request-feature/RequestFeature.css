@@ -1,0 +1,25 @@
+.feature-div {
+    margin-top: 3rem;
+  }
+  .feature-div p {
+    font-size: 1rem;
+    font-family: "Poppins", sans-serif;
+    margin: 1rem 8rem 1rem 3rem;
+    width: 12rem;
+    font-weight: 500;
+    color: #1f1f41;
+    cursor: pointer;
+  }
+  
+  .feature-div p:hover {
+    color: black;
+  }
+  
+  .feature-div hr {
+    background-color: rgb(232, 236, 253);
+    height: 1px;
+    width: 100%;
+  
+    border: none;
+  }
+  

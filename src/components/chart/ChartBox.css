@@ -1,0 +1,25 @@
+.recharts-surface {
+    overflow: visible;
+}
+
+.chart-view {
+    margin: 0rem 3rem;
+}
+
+.chart-view  h2 {
+    margin-bottom: 2rem;
+}
+h1 span {
+    font-size: 1.8rem;
+    color: #7578B5;
+}
+
+circle.recharts-dot.recharts-line-dot {
+    display: none!important;
+}
+
+@media only screen and (max-width: 700px) {
+    .chart-view {
+        margin: 1rem;
+    }
+}
