@@ -2,6 +2,7 @@ import defiLogo from "../../assets/defiPe_logo.webp";
 import "./Header.css";
 import { Bars3Icon } from "@heroicons/react/24/solid";
 import React, { useState } from "react";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 function Header() {
   const [toggle, setToggle] = useState(false);
@@ -26,6 +27,7 @@ function Header() {
           </li>
         </ul>
       </nav>
+      <ConnectButton />
       {toggle ? (
         <nav className="mobile-menu">
           <ul id="menuList">

@@ -20,7 +20,6 @@
   .trade-box_success_message {
     height: 100%;
     width: 30rem;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     padding: 4%;
     border-radius: 5%;
     display: flex;

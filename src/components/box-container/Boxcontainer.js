@@ -1,13 +1,14 @@
 import "./Boxcontainer.css";
 import { ethers } from "ethers";
-import Web3Modal from "web3modal";
 import React, { useState, useEffect } from "react";
 import Modal from "react-modal";
 import qs from "qs";
 import tokenABI from "../internal-api/TokenJSON.js";
-import Erc20ABI from "../internal-api/Erc20ABI";
 import ChartBox from "../chart/ChartBox.js";
 import successLogo from "../../assets/check.png";
+import { useAccount, useConnect, useSigner, erc20ABI } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+
 const customStyles = {
   content: {
     top: "50%",
@@ -25,8 +26,6 @@ Modal.setAppElement("#root");
 
 function Boxcontainer() {
   const [modalIsOpen, setIsOpen] = useState(false);
-  const [contractSigner, setContractSigner] = useState(null);
-  const [userAddress, setUserAddress] = useState(null);
   const [toggleBuyToken, setToggleBuyToken] = useState();
   const [spentToken, setSpentToken] = useState(4);
   const [buyToken, setBuyToken] = useState(0);
@@ -35,6 +34,10 @@ function Boxcontainer() {
   const [estimatedGas, setEstimatedGas] = useState(null);
   const [tradeSuccess, setTradeSuccess] = useState(false);
   const [recept, setRecept] = useState(null);
+
+  const { connector: activeConnector, isConnected, address } = useAccount();
+  const { openConnectModal } = useConnectModal();
+  const { data: signer, isError, isLoading } = useSigner();
 
   useEffect(() => {
     if (spentAmount > 0) {
@@ -79,18 +82,6 @@ function Boxcontainer() {
     closeModal();
   }
 
-  async function connectWallet(e) {
-    e.preventDefault();
-    const web3Modal = new Web3Modal();
-    const instance = await web3Modal.connect();
-    const provider = new ethers.providers.Web3Provider(instance);
-
-    const signer = await provider.getSigner();
-    setContractSigner(signer);
-    let a = await signer.getAddress();
-    setUserAddress(a);
-  }
-
   async function getPrice() {
     let amount = Number(spentAmount * 10 ** tokenABI[spentToken].decimal);
 
@@ -111,14 +102,14 @@ function Boxcontainer() {
     setBuyAmount(a);
   }
 
-  async function getQuote(account) {
+  async function getQuote() {
     let amount = Number(spentAmount * 10 ** tokenABI[spentToken].decimal);
     const params = {
       sellToken: tokenABI[spentToken].address, //Sell Token
       buyToken: tokenABI[buyToken].address, //Buy Token
       sellAmount: amount,
       skipValidation: true,
-      takerAddress: account,
+      takerAddress: address,
     };
 
     const response = await fetch(
@@ -135,7 +126,7 @@ function Boxcontainer() {
   async function trySwap(e) {
     e.preventDefault();
 
-    const swapQuoteJSON = await getQuote(userAddress);
+    const swapQuoteJSON = await getQuote();
     const fromTokenAddress = tokenABI[spentToken].address;
 
     const txParams = {
@@ -150,7 +141,7 @@ function Boxcontainer() {
       tokenABI[spentToken].address ==
       "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
     ) {
-      let invoice = await contractSigner.sendTransaction(txParams);
+      let invoice = await signer.sendTransaction(txParams);
 
       invoice
         .wait()
@@ -162,8 +153,8 @@ function Boxcontainer() {
     } else {
       const ERC20TokenContract = new ethers.Contract(
         fromTokenAddress,
-        Erc20ABI,
-        contractSigner
+        erc20ABI,
+        signer
       );
 
       let amount = Number(spentAmount * 10 ** tokenABI[spentToken].decimal);
@@ -175,7 +166,7 @@ function Boxcontainer() {
 
       await approval.wait();
 
-      let invoice = await contractSigner.sendTransaction(txParams);
+      let invoice = await signer.sendTransaction(txParams);
 
       invoice
         .wait()
@@ -206,7 +197,7 @@ function Boxcontainer() {
 
             <div className="modal-button-div">
               <button
-                class="button-28"
+                className="button-28"
                 role="button"
                 onClick={() =>
                   openInNewTab(`https://polygonscan.com/tx/${recept}`)
@@ -215,7 +206,7 @@ function Boxcontainer() {
                 Receipt
               </button>
               <button
-                class="button-27"
+                className="button-27"
                 role="button"
                 onClick={() => refreshPage()}
               >
@@ -325,16 +316,28 @@ function Boxcontainer() {
                 </div>
               </div>
 
-              <button
-                onClick={(e) => {
-                  contractSigner == null ? connectWallet(e) : trySwap(e);
-                }}
-                disabled={false}
-                className="button-34"
-                role="button"
-              >
-                {contractSigner == null ? "Connect Wallet" : "Swap"}
-              </button>
+              {isConnected == false ? (
+                <>
+                  {openConnectModal && (
+                    <button
+                      onClick={openConnectModal}
+                      type="button"
+                      className="button-34"
+                    >
+                      Connect Wallet
+                    </button>
+                  )}
+                </>
+              ) : (
+                <button
+                  onClick={(e) => trySwap(e)}
+                  disabled={false}
+                  className="button-34"
+                  role="button"
+                >
+                  {isConnected == false ? "Connect Wallet" : "Swap"}
+                </button>
+              )}
               <div className="space"></div>
 
               <div className="gas-box">
